@@ -93,6 +93,7 @@ plot(fit)
 # bsFisher -------------------------------------------------------------
 fit_bsFisher <- BayesSIM(y ~ ., data = data_train, setSeed = 123)
 index_bsFisher <- coef(fit_bsFisher, se = TRUE)
+set.seed(123)
 pred_bsFisher <- predict(fit_bsFisher,
                          newdata = data_test)
 
@@ -101,6 +102,7 @@ fit_bsSphere <- BayesSIM(y ~ ., data = data_train,
                          indexprior = "sphere", link = "bspline",
                          setSeed = 123)
 index_bsSphere <- coef(fit_bsSphere, se = TRUE)
+set.seed(123)
 pred_bsSphere <- predict(fit_bsSphere,
                          newdata = data_test)
 
@@ -109,6 +111,7 @@ fit_bsPolar <- BayesSIM(y ~ ., data = data_train,
                         indexprior = "polar", link = "bspline",
                         setSeed = 123)
 index_bsPolar <- coef(fit_bsPolar, se = TRUE)
+set.seed(123)
 pred_bsPolar <- predict(fit_bsPolar,
                         newdata = data_test)
 
@@ -117,6 +120,7 @@ fit_bsSpike <- BayesSIM(y ~ ., data = data_train,
                         indexprior = "spike", link = "bspline",
                         setSeed = 123)
 index_bsSpike <- coef(fit_bsSpike, se = TRUE)
+set.seed(123)
 pred_bsSpike <- predict(fit_bsSpike,
                         newdata = data_test)
 
@@ -125,6 +129,7 @@ fit_gpFisher <- BayesSIM(y ~ ., data = data_train,
                          indexprior = "fisher", link = "gp",
                          setSeed = 123)
 index_gpFisher <- coef(fit_gpFisher, se = TRUE)
+set.seed(123)
 pred_gpFisher  <- predict(fit_gpFisher, newdata = data_test)
 
 # gpSphereEG ----------------------------------------------------------
@@ -133,6 +138,7 @@ fit_gpSphere <- BayesSIM(y ~ ., data = data_train,
                          niter = 700, nburnin = 200,
                          method = "EG", setSeed = 123)
 index_gpSphere <- coef(fit_gpSphere, se = TRUE)
+set.seed(123)
 pred_gpSphere_  <- predict(fit_gpSphere, newdata = data_test)
 
 # gpPolar -------------------------------------------------------------
@@ -140,6 +146,7 @@ fit_gpPolar <- BayesSIM(y ~ ., data = data_train,
                         indexprior = "polar", link = "gp",
                         setSeed = 123)
 index_gpPolar <- coef(fit_gpPolar, se = TRUE)
+set.seed(123)
 pred_gpPolar_  <- predict(fit_gpPolar, newdata = data_test)
 
 # gpSpike -------------------------------------------------------------
@@ -147,6 +154,7 @@ fit_gpSpike <- BayesSIM(y ~ ., data = data_train,
                         indexprior = "spike", link = "gp",
                         setSeed = 123)
 index_gpSpike <- coef(fit_gpSpike, se = TRUE)
+set.seed(123)
 pred_gpSpike_  <- predict(fit_gpSpike, newdata = data_test)
 
 #########################
@@ -156,9 +164,11 @@ pred_gpSpike_  <- predict(fit_gpSpike, newdata = data_test)
 modelName <- c("bsFisher","bsSphere","bsPolar","bsSpike",
                "gpFisher", "gpSphere","gpPolar","gpSpike")
 
-rmse <- c(pred_bsFisher$rmse, pred_bsSphere$rmse, pred_bsPolar$rmse,
-          pred_bsSpike$rmse, pred_gpFisher$rmse, pred_gpSphere_$rmse,
-          pred_gpPolar_$rmse, pred_gpSpike_$rmse)
+rmseFunc <- function(x){sqrt(mean((x$fitted - x$truey)^2))}
+
+rmse <- c(rmseFunc(pred_bsFisher), rmseFunc(pred_bsSphere), rmseFunc(pred_bsPolar),
+          rmseFunc(pred_bsSpike), rmseFunc(pred_gpFisher), rmseFunc(pred_gpSphere_),
+          rmseFunc(pred_gpPolar_), rmseFunc(pred_gpSpike_))
 
 ## Index matrix
 index <- list(
@@ -212,7 +222,7 @@ tab <- do.call(rbind, lapply(modelName, function(nm){
 }))
 
 row.names(tab) <- NULL
-colnames(tab) <- c("Model name", paste("index", 1:4, "(sd)"), "Angle", "RMSE")
+colnames(tab) <- c("Model name", paste("index", 1:4, "(se)"), "Angle", "RMSE")
 tab
 # write.csv(tab, "FINAL_illustration.csv")
 
@@ -259,7 +269,7 @@ end_ppr <- Sys.time()
 pred <- predict(model_ppr, newdata = df_DATA_test)
 index_ppr <- model_ppr$alpha
 rmse_ppr <- sqrt(mean((pred-y_test)^2))
-time_ppr <- difftime(end_ppr, start_ppr, units = "secs") 
+time_ppr <- difftime(end_ppr, start_ppr, units = "secs")
 
 # PLSiMCpp -------------------------------------------------------------------
 start_PLSiMCpp <- Sys.time()
@@ -312,7 +322,7 @@ b
 index_mgcv <- b$alpha
 end_mgcv <- Sys.time()
 time_mgcv <- difftime(end_mgcv, start_mgcv, units = "secs")
- 
+
 ## prediction
 X_test_matrix <- as.matrix(X_test)
 eta_new <- X_test_matrix %*% index_mgcv
@@ -551,8 +561,11 @@ totalTime_gpSpike <- difftime(end, start, units = "secs")
 modelName <- c("bsFisher","bsSphere","bsPolar","bsSpike",
                "gpFisher","gpSphere","gpPolar","gpSpike")
 
-rmse <- c(pred_bsFisher$rmse, pred_bsSphere$rmse, pred_bsPolar$rmse, pred_bsSpike$rmse,
-          pred_gpFisher$rmse, pred_gpSphereEB$rmse, pred_gpPolarHigh$rmse, pred_gpSpike_$rmse)
+rmseFunc <- function(x){sqrt(mean((x$fitted - x$truey)^2))}
+
+rmse <- c(rmseFunc(pred_bsFisher), rmseFunc(pred_bsSphere), rmseFunc(pred_bsPolar),
+          rmseFunc(pred_bsSpike), rmseFunc(pred_gpFisher), rmseFunc(pred_gpSphereEB),
+          rmseFunc(pred_gpPolarHigh), rmseFunc(pred_gpSpike_))
 
 time <- c(time_bsFisher, time_bsSphere, time_bsPolar, time_bsSpike,
           time_gpFisher, time_gpSphereEB, time_gpPolarHigh, time_gpSpike)
