@@ -2,7 +2,6 @@
 library(BayesSIM)
 library(np)
 library(mgcv)
-library(PLSiMCpp)
 library(tgp)
 library(plgp)
 library(tidyverse)
@@ -271,21 +270,6 @@ index_ppr <- model_ppr$alpha
 rmse_ppr <- sqrt(mean((pred-y_test)^2))
 time_ppr <- difftime(end_ppr, start_ppr, units = "secs")
 
-# PLSiMCpp -------------------------------------------------------------------
-start_PLSiMCpp <- Sys.time()
-fit_PLSim <- plsim.est(xdat = NULL, zdat = X_train, ydat = as.data.frame(y_train),
-                       TargetMethod = "plsimest",
-                       ParmaSelMethod = "CrossValidation")
-end_PLSiMCpp <- Sys.time()
-
-# index
-index_PLSiMCpp <- fit_PLSim$zeta[,1]
-pred_PLSim <- predict(fit_PLSim, z_test = as.matrix(X_test))
-
-# RMSE
-rmse_PLSiMCpp <- sqrt(mean((pred_PLSim[,1] - y_test)^2))
-time_PLSiMCpp <- difftime(end_PLSiMCpp, start_PLSiMCpp, units = "secs")
-
 # mgcv -------------------------------------------------------------------
 si <- function(theta, y, x, opt=TRUE, k=10, fx=FALSE) {
   ## Fit single index model using gam call, given theta (defines alpha).
@@ -394,14 +378,13 @@ time_plgp <- end_plgp - start_plgp
 
 
 #### Result ####
-modelName <- c("np", "ppr", "mgcv", "PLSiMCpp", "tgp", "plgp")
+modelName <- c("np", "ppr", "mgcv", "tgp", "plgp")
 
-rmse <- c(rmse_np, rmse_ppr, rmse_mgcv, rmse_PLSiMCpp, rmse_tgp, rmse_plgp)
-time <- c(time_np, time_ppr, time_mgcv, time_PLSiMCpp, time_tgp, time_plgp)
+rmse <- c(rmse_np, rmse_ppr, rmse_mgcv, rmse_tgp, rmse_plgp)
+time <- c(time_np, time_ppr, time_mgcv, time_tgp, time_plgp)
 index_mean <- rbind(index_np,
                     index_ppr,
                     index_mgcv,
-                    index_PLSiMCpp,
                     index_tgp_mean,
                     index_plgp)
 index_sd <- rbind(index_tgp_sd,
@@ -426,7 +409,7 @@ fmt_time_secs <- function(x, digits = 2, suffix = TRUE) {
 
 
 index_fmt <- lapply(seq_len(p), function(j) {
-  m <- index_mean[3:4, j]
+  m <- index_mean[4:5, j]
   s <- index_sd[, j]
   fmt_pair(m, s, d_mean = 3, d_sd = 4)
 }) %>% as.data.frame(stringsAsFactors = FALSE)
@@ -434,7 +417,7 @@ index_fmt <- lapply(seq_len(p), function(j) {
 
 colnames(index_fmt) <- colnames(concrete)[-9]
 colnames(index_mean) <- colnames(concrete)[-9]
-index_fmt <- rbind(round(index_mean[1:2,], 3), index_fmt)
+index_fmt <- rbind(round(index_mean[1:3,], 3), index_fmt)
 
 tbl <- data.frame(
   RMSE        = fmt_num(rmse, 4),
@@ -629,3 +612,4 @@ out_csv <- cbind(model = rownames(tbl), tbl)
 output_bayesSIM <- as.data.frame(t(out_csv)[-1,])
 output_bayesSIM
 # write.csv(output_bayesSIM, "table_indices_BayesSIM.csv", row.names = FALSE)
+
