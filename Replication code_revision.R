@@ -250,7 +250,7 @@ df_DATA_test <- data.frame(X_test, y = y_test)
 start_np <- Sys.time()
 model_np <- npindex(y ~ cement + blast_furnace_slag + flay_ash + water +
                       superplasticizer + coarse_aggreate + fine_aggregate + age,
-                    data = df_DATA,
+                    data = df_DATA_train,
                     newdata = df_DATA_test,
                     nmulti = 1)
 end_np <- Sys.time()
@@ -263,7 +263,7 @@ time_np <- end_np - start_np
 start_ppr <- Sys.time()
 model_ppr <- ppr(y ~ cement + blast_furnace_slag + flay_ash + water +
                    superplasticizer + coarse_aggreate + fine_aggregate + age,
-                 data = df_DATA, nterms = 1)
+                 data = df_DATA_train, nterms = 1)
 end_ppr <- Sys.time()
 pred <- predict(model_ppr, newdata = df_DATA_test)
 index_ppr <- model_ppr$alpha
@@ -319,7 +319,7 @@ rmse_mgcv <- sqrt(mean((predicted_response - y_test)^2))
 # tgp --------------------------------------------------------------------
 start_tgp <- Sys.time()
 model_tgp <- bgp(X = X_train,
-                 Z = df_DATA$y,
+                 Z = y_train,
                  XX = X_test,
                  BTE  = c(1000, 5000, 1),
                  meanfn = "constant",
@@ -336,8 +336,8 @@ time_tgp <- difftime(end_tgp, start_tgp, units = "secs")
 
 # plgp --------------------------------------------------------------------
 graphics.off()
-formals(data.GP)$X <- as.matrix(df_DATA[,-9])
-formals(data.GP)$Y <- as.matrix(df_DATA$y)
+formals(data.GP)$X <- as.matrix(X_train)
+formals(data.GP)$Y <- as.matrix(y_train)
 
 ## default prior
 prior <- prior.GP(p, "sim")
@@ -612,4 +612,5 @@ out_csv <- cbind(model = rownames(tbl), tbl)
 output_bayesSIM <- as.data.frame(t(out_csv)[-1,])
 output_bayesSIM
 # write.csv(output_bayesSIM, "table_indices_BayesSIM.csv", row.names = FALSE)
+
 
